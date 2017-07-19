@@ -1,0 +1,11 @@
+#####SET_VER#####
+BASEDIR={#basedir#}
+SER_NAME={#name#}
+SHUTDOWN_PORT={#tomcatport_shutdown#}
+HTTP_PORT={#tomcatport#}
+AJP_PORT={#tomcatport_ajp#}
+#####NO_NEED_2_SET#####
+TOMCAT_NAME=tomcat_$HTTP_PORT
+SER_BASE=$BASEDIR/$SER_NAME
+SER_BASE_R="${SER_BASE//\//\\/}"
+SRCFILE=/home/work/tmp/template

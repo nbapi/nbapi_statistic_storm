@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Aug 20 17:02:07 CST 2012-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OperationLog">
+	
+   <resultMap id="BaseResultMap" type="OperationLog">
+    <id column="id"                    jdbcType="DECIMAL"  javaType="Integer" property="id" />
+    <result column="user_id"            jdbcType="DECIMAL"  javaType="Integer" property="userId"  />
+    <result column="login_name"         jdbcType="VARCHAR"  javaType="String" property="loginName" />
+    <result column="user_name"          jdbcType="VARCHAR"  javaType="String" property="UserName" />
+    <result column="group_id"           jdbcType="DECIMAL"  javaType="Integer" property="groupId" />
+    <result column="department_id" 	   jdbcType="VARCHAR"  javaType="String" property="departmentId" />
+    <result column="datetime"          jdbcType="DECIMAL"  javaType="Integer" property="datetime" />
+    <result column="ip"                jdbcType="VARCHAR"  javaType="String" property="ip" />
+    <result column="action_name"        jdbcType="VARCHAR"  javaType="String" property="actionName" />
+    <result column="action_description" jdbcType="VARCHAR"  javaType="String" property="actionDescription" />
+    <result column="action_resault"     jdbcType="DECIMAL"  javaType="Integer" property="actionResault" />
+    <result column="action_url"         jdbcType="VARCHAR"  javaType="String" property="actionUrl" />
+    <result column="action_parameter"   jdbcType="VARCHAR"  javaType="String" property="actionParameter" />
+    <result column="target_type"        jdbcType="VARCHAR"  javaType="String" property="targetType" />
+    <result column="target_id"          jdbcType="VARCHAR"  javaType="String" property="targetId" />
+  </resultMap>
+  
+  <!-- 插入日志 -->
+  <insert id="addEntity" parameterType="OperationLog" useGeneratedKeys="true" keyProperty="id" >
+  	insert into tb_carms_operationlog (user_id,login_name,user_name,group_id,department_id,datetime,ip,action_name,action_description,action_resault,action_url,action_parameter,target_type,target_id) 
+  	values (#{userId},#{loginName},#{UserName},#{groupId},#{departmentId},#{datetime},#{ip},#{actionName},#{actionDescription},#{actionResault},#{actionUrl},#{actionParameter},#{targetType},#{targetId})
+  </insert>
+  
+  <!-- 日记查找 -->
+  <select id="findEntityListByCond" parameterType="java.util.Map" resultMap="BaseResultMap" >
+  	select * from tb_carms_operationlog
+  	<where>
+  		<if test="id != null">
+  		 and id = #{id,jdbcType=DECIMAL}
+  		</if>
+  		<if test="userId != null">
+  		 and user_id = #{userId,jdbcType=DECIMAL}
+  		</if>
+  		<if test="loginName != null">
+  		 and login_name = #{loginName,jdbcType=VARCHAR}
+  		</if>
+  		<if test="UserName != null">
+  		 and user_name = #{UserName,jdbcType=VARCHAR}
+  		</if>
+  		<if test="groupId != null">
+  		 and group_id = #{groupId,jdbcType=DECIMAL}
+  		</if>
+  		<if test="departmentId != null">
+  		 and department_id = #{departmentId,jdbcType=VARCHAR}
+  		</if>
+  		<if test="datetime != null">
+  		 and datetime = #{datetime,jdbcType=DECIMAL}
+  		</if>
+  		<if test="ip != null">
+  		 and ip = #{ip,jdbcType=VARCHAR}
+  		</if>
+  		<if test="actionName != null">
+  		 and action_name = #{actionName,jdbcType=VARCHAR}
+  		</if>
+  		<if test="actionDescription != null">
+  		 and action_description = #{actionDescription,jdbcType=VARCHAR}
+  		</if>
+  		<if test="actionUrl != null">
+  		 and action_url = #{actionUrl,jdbcType=VARCHAR}
+  		</if>
+  		<if test="actionResault != null">
+  		 and action_resault = #{actionResault,jdbcType=DECIMAL}
+  		</if>
+  		<if test="actionParameter != null">
+  		 and action_parameter = #{actionParameter,jdbcType=VARCHAR}
+  		</if>
+  		<if test="targetType != null">
+  		 and target_type = #{targetType,jdbcType=VARCHAR}
+  		</if>
+  		<if test="targetId != null">
+  		 and target_id = #{targetId,jdbcType=VARCHAR}
+  		</if>
+  	</where>
+  </select>
+  
+</mapper>
