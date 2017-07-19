@@ -23,7 +23,7 @@
         <hudson.model.StringParameterDefinition>
           <name>package_name</name>
           <description>project package</description>
-          <defaultValue>nbapi_statistic_storm.jar</defaultValue>
+          <defaultValue>nbapi-statistic-storm-jar-with-dependencies.jar</defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>remote_ftp_dir</name>
