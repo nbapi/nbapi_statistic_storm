@@ -76,6 +76,14 @@ public class IncrInsertConvertHandler implements IBizHandler {
 		masterSlaveDelayMap.put("timeDiff", masterSlaveDelayMinutes);
 		jsonObj = new JSONObject(masterSlaveDelayMap);
 		rst.add(jsonObj);
+		// 记录数量
+		Map<String, Object> recordCountMap = new HashMap<String, Object>();
+		recordCountMap.put(Const.BUSINESS_TYPE, model.getBusiness_type());
+		recordCountMap.put(Const.LOG_TIME, model.getLog_time());
+		recordCountMap.put("recordCountIncrType", model.getIncrType());
+		recordCountMap.put("recordCount", model.getRecordCount());
+		jsonObj = new JSONObject(recordCountMap);
+		rst.add(jsonObj);
 		return rst;
 	}
 
