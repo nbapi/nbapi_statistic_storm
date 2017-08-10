@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -81,7 +82,7 @@ public class IncrInsertConvertHandler implements IBizHandler {
 		recordCountMap.put(Const.BUSINESS_TYPE, model.getBusiness_type());
 		recordCountMap.put(Const.LOG_TIME, model.getLog_time());
 		recordCountMap.put("recordCountIncrType", model.getIncrType());
-		recordCountMap.put("recordCount", model.getRecordCount());
+		recordCountMap.put("recordCount", StringUtils.isEmpty(model.getRecordCount()) ? 0l : model.getRecordCount());
 		jsonObj = new JSONObject(recordCountMap);
 		rst.add(jsonObj);
 		return rst;
