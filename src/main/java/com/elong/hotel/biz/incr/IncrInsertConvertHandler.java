@@ -82,7 +82,7 @@ public class IncrInsertConvertHandler implements IBizHandler {
 		recordCountMap.put(Const.BUSINESS_TYPE, model.getBusiness_type());
 		recordCountMap.put(Const.LOG_TIME, model.getLog_time());
 		recordCountMap.put("recordCountIncrType", model.getIncrType());
-		recordCountMap.put("recordCount", StringUtils.isEmpty(model.getRecordCount()) ? 0l : model.getRecordCount());
+		recordCountMap.put("recordCount", StringUtils.isEmpty(model.getRecordCount()) ? 0l : Long.valueOf(model.getRecordCount()));
 		jsonObj = new JSONObject(recordCountMap);
 		rst.add(jsonObj);
 		return rst;
