@@ -11,7 +11,6 @@ import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.StringDecoder;
-import kafka.utils.VerifiableProperties;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -55,9 +54,8 @@ public class LogReaderSpoutsForKafka extends BaseRichSpout {
 		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 		topicCountMap.put(topic, new Integer(1));
 
-		StringDecoder keyDecoder = new StringDecoder(new VerifiableProperties());
-		StringDecoder valueDecoder = new StringDecoder(
-				new VerifiableProperties());
+		StringDecoder keyDecoder = new StringDecoder(null);
+		StringDecoder valueDecoder = new StringDecoder(null);
 
 		Map<String, List<KafkaStream<String, String>>> consumerMap = consumer
 				.createMessageStreams(topicCountMap, keyDecoder, valueDecoder);
