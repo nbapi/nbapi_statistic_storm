@@ -36,7 +36,7 @@ public class TopologyMainCluster {
 
 		// cluster mode:
 		try {
-			conf.setNumWorkers(6);
+			conf.setNumWorkers(9);
 			StormSubmitter.submitTopology("NBAPIStatisticTopology", conf,
 					builder.createTopology());
 		} catch (Exception e) {
