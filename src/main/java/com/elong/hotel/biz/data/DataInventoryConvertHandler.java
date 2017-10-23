@@ -12,33 +12,33 @@ import com.alibaba.fastjson.JSONObject;
 import com.elong.hotel.biz.IBizHandler;
 import com.elong.hotel.biz.order.AgentNameClassifier;
 import com.elong.hotel.constant.Const;
-import com.elong.nb.DataRatePlanStatistic;
+import com.elong.nb.DataInventoryPlanStatistic;
 
-public class DataRatePlanConvertHandler implements IBizHandler {
+public class DataInventoryConvertHandler implements IBizHandler {
 
 	@Override
 	public List<JSONObject> handle(JSONObject jsonObject) {
 		List<JSONObject> rst = new LinkedList<JSONObject>();
-		DataRatePlanStatistic model = JSON.parseObject(jsonObject.toJSONString(), DataRatePlanStatistic.class);
+		DataInventoryPlanStatistic model = JSON.parseObject(jsonObject.toJSONString(), DataInventoryPlanStatistic.class);
 		String businessType = model.getBusiness_type();
 		businessType = StringUtils.substringBefore(businessType, "_");
 		
-		String proxyid = AgentNameClassifier.classify(model.getProxyId());
-		// rp数量
-		Map<String, Object> ratePlanMap = new HashMap<String, Object>();
-		ratePlanMap.put(Const.BUSINESS_TYPE, businessType);
-		ratePlanMap.put(Const.LOG_TIME, model.getLog_time());
-		ratePlanMap.put("proxyid", proxyid);
-		ratePlanMap.put("count", model.getRatePlanSize());
-		JSONObject jsonObj = new JSONObject(ratePlanMap);
+		String invProxyId = AgentNameClassifier.classify(model.getInvProxyId());
+		// inv数量
+		Map<String, Object> invMap = new HashMap<String, Object>();
+		invMap.put(Const.BUSINESS_TYPE, businessType);
+		invMap.put(Const.LOG_TIME, model.getLog_time());
+		invMap.put("invProxyId", invProxyId);
+		invMap.put("count", model.getInvSize());
+		JSONObject jsonObj = new JSONObject(invMap);
 		rst.add(jsonObj);
-		// 房型状态
+		// inv状态
 		Map<String, Object> roomStatusMap = new HashMap<String, Object>();
 		roomStatusMap.put(Const.BUSINESS_TYPE, businessType);
 		roomStatusMap.put(Const.LOG_TIME, model.getLog_time());
-		roomStatusMap.put("proxyid", proxyid);
-		roomStatusMap.put("roomTrueCount", model.getRoomTrueSize());
-		roomStatusMap.put("roomFalseCount", model.getRoomFalseSize());
+		roomStatusMap.put("invProxyId", invProxyId);
+		roomStatusMap.put("invTrueCount", model.getInvTrueSize());
+		roomStatusMap.put("invFalseCount", model.getInvFalseSize());
 		jsonObj = new JSONObject(roomStatusMap);
 		rst.add(jsonObj);
 		return rst;
