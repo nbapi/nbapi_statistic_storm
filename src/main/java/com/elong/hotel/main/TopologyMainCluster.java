@@ -17,19 +17,19 @@ public class TopologyMainCluster {
 		TopologyBuilder builder = new TopologyBuilder();
 
 		builder.setSpout("spout_log_reader", new LogReaderSpoutsForKafka(
-				"orderSubmitQueue"), 9);
+				"orderSubmitQueue"), 18);
 		LogCollectBolt logCollectBolt = new LogCollectBolt();
-		builder.setBolt("bolt_log_collect", logCollectBolt, 9)
+		builder.setBolt("bolt_log_collect", logCollectBolt, 18)
 				.localOrShuffleGrouping("spout_log_reader");
 
 		builder.setBolt("log-normalizer-single",
-				new OneDimensionLogFilterBolt(), 9).localOrShuffleGrouping(
+				new OneDimensionLogFilterBolt(), 18).localOrShuffleGrouping(
 				"bolt_log_collect");
 
 		builder.setBolt("log-count-minute", new OneDimensionMinuteCountBolt(),
-				9).localOrShuffleGrouping("log-normalizer-single");
+				18).localOrShuffleGrouping("log-normalizer-single");
 		builder.setBolt("log-update-minute", new OneDimensionMongoMinuteBolt(),
-				9).localOrShuffleGrouping("log-count-minute");
+				18).localOrShuffleGrouping("log-count-minute");
 
 		Config conf = new Config();
 		conf.setDebug(true);
