@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 
@@ -63,7 +64,7 @@ public class OneDimensionLogFilterBolt extends BaseRichBolt {
 					fieldGroupingMap.put("dateTime", dateTime);
 					fieldGroupingMap.put("metric", metric.getName());
 					fieldGroupingMap.put("dimensionItem", "dimensionValue." + CustomUtil.deleteDot(dimensionItemName));
-					String fieldGroupingKey = JSON.toJSONString(fieldGroupingMap);
+					String fieldGroupingKey = DigestUtils.md5Hex(JSON.toJSONString(fieldGroupingMap));
 					String metricJson = JSON.toJSON(metric).toString();
 					collector.emit(new Values(fieldGroupingKey, module_key, dimensionKey, metricJson, jsonObj));
 				}

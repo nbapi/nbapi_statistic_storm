@@ -23,9 +23,9 @@ public class TopologyMainCluster {
 
 		builder.setBolt("log-normalizer-single", new OneDimensionLogFilterBolt(), 18).localOrShuffleGrouping("bolt_log_collect");
 
-		builder.setBolt("log-count-minute", new OneDimensionMinuteCountBolt(), 180).fieldsGrouping("log-normalizer-single",
+		builder.setBolt("log-count-minute", new OneDimensionMinuteCountBolt(), 72).fieldsGrouping("log-normalizer-single",
 				new Fields("fieldGroupingKey"));
-		builder.setBolt("log-update-minute", new OneDimensionMongoMinuteBolt(), 36).localOrShuffleGrouping("log-count-minute");
+		builder.setBolt("log-update-minute", new OneDimensionMongoMinuteBolt(), 72).localOrShuffleGrouping("log-count-minute");
 
 		Config conf = new Config();
 		conf.setDebug(true);
