@@ -40,6 +40,13 @@ public class IncrQueryConvertHandler implements IBizHandler {
 			dimensionKeyValue.put("agentNameCount_" + incrType, agentName);
 		}
 
+		// 当前时间
+		Date logTime = null;
+		try {
+			logTime = DateUtils.parseDate(model.getLog_time(), new String[] { "yyyy-MM-dd HH:mm:ss" });
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 		// 查询延迟
 		Date queryTime = null;
 		try {
@@ -48,8 +55,7 @@ public class IncrQueryConvertHandler implements IBizHandler {
 			e.printStackTrace();
 		}
 		if (queryTime != null) {
-			Date now = new Date();
-			long timeDiff = (now.getTime() - queryTime.getTime()) / (1000 * 60);
+			long timeDiff = (logTime.getTime() - queryTime.getTime()) / (1000 * 60);
 			dimensionKeyValue.put("minuteVal", timeDiff);
 		}
 
