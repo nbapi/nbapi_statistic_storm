@@ -81,9 +81,9 @@ public class LogReaderSpoutsForKafka extends BaseRichSpout {
 						if (it.hasNext()) {
 							MessageAndMetadata<String, String> msgAndMetadata = it.next();
 							String message = msgAndMetadata.message();
-							if (StringUtils.isEmpty(message))
-								return;
-							collector.emit(new Values(topic, message));
+//							if (StringUtils.isEmpty(message))
+//								return;
+//							collector.emit(new Values(topic, message));
 						}
 					}
 				});
