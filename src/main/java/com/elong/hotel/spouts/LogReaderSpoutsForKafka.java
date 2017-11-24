@@ -30,7 +30,7 @@ public class LogReaderSpoutsForKafka extends BaseRichSpout {
 
 	private static final int CUSTOMER_THREAD_NUM = 20;
 
-	private ExecutorService executorService = Executors.newFixedThreadPool(CUSTOMER_THREAD_NUM);
+	private ExecutorService executorService;
 
 	private SpoutOutputCollector collector;
 	@SuppressWarnings("unused")
@@ -49,6 +49,7 @@ public class LogReaderSpoutsForKafka extends BaseRichSpout {
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		this.collector = collector;
 		this.context = context;
+		this.executorService = Executors.newFixedThreadPool(CUSTOMER_THREAD_NUM);
 
 		Properties properties = PropertiesHelper.getEnvPropertise("kafka");
 		ConsumerConfig config = new ConsumerConfig(properties);
