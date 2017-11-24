@@ -3,10 +3,10 @@ package com.elong.hotel.bolts;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,12 +83,10 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 			// 定时器触发的，从内存中取数据emit,同时清除内存中已emit数据
 			if (isTickTuple(input)) {
 				Collection<OneDimensionMinuteStaticResult> memoryStaticBeanList = memoryStaticBeanMap.values();
-				Iterator<OneDimensionMinuteStaticResult> iter = memoryStaticBeanList.iterator();
-				while (iter.hasNext()) {
-					OneDimensionMinuteStaticResult memoryStaticBean = iter.next();
+				for (OneDimensionMinuteStaticResult memoryStaticBean : memoryStaticBeanList) {
 					collector.emit(new Values(memoryStaticBean));
-					iter.remove();
 				}
+				memoryStaticBeanMap.clear();
 				return;
 			}
 
@@ -132,7 +130,7 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 				keyMap.put("dateTime", staticBean.getTime());
 				keyMap.put("metric", staticBean.getMetric());
 				keyMap.put("dimensionItem", "dimensionValue." + CustomUtil.deleteDot(staticBean.getDimensionItemName()));
-				String keyStr = JSON.toJSONString(keyMap);
+				String keyStr = DigestUtils.md5Hex(JSON.toJSONString(keyMap));
 				memoryStaticBeanMap.put(keyStr, staticBean);
 			} else {
 				collector.emit(new Values(staticBean));
