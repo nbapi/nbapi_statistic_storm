@@ -1,5 +1,6 @@
 package com.elong.hotel.spouts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class LogReaderSpoutsForKafka extends BaseRichSpout {
 	@SuppressWarnings("unused")
 	private TopologyContext context;
 
-	private List<ConsumerIterator<String, String>> its;
+	private List<ConsumerIterator<String, String>> its = new ArrayList<ConsumerIterator<String,String>>();
 
 	private String topic;
 
