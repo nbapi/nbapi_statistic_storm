@@ -3,9 +3,11 @@ package com.elong.hotel.main;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
 
 import com.elong.hotel.bolts.LogCollectBolt;
 import com.elong.hotel.bolts.OneDimensionLogFilterBolt;
+import com.elong.hotel.bolts.OneDimensionLogMinuteFilterBolt;
 import com.elong.hotel.bolts.OneDimensionMinuteCountBolt;
 import com.elong.hotel.bolts.OneDimensionMinuteLastCountBolt;
 import com.elong.hotel.bolts.OneDimensionMongoMinuteBolt;
@@ -23,11 +25,14 @@ public class TopologyMainCluster {
 
 		builder.setBolt("log-normalizer-single", new OneDimensionLogFilterBolt(), 18).localOrShuffleGrouping("bolt_log_collect");
 
-		builder.setBolt("log-count-minute", new OneDimensionMinuteCountBolt(), 144).localOrShuffleGrouping("log-normalizer-single");
+		builder.setBolt("log-count-minute-other", new OneDimensionMinuteCountBolt(), 144).directGrouping("log-normalizer-single");
 
-		builder.setBolt("log-count-minute-last", new OneDimensionMinuteLastCountBolt(), 18).directGrouping("log-normalizer-single");
+		builder.setBolt("log-minuteval-filter", new OneDimensionLogMinuteFilterBolt(), 18).directGrouping("log-normalizer-single");
 
-		builder.setBolt("log-update-minute", new OneDimensionMongoMinuteBolt(), 72).localOrShuffleGrouping("log-count-minute")
+		builder.setBolt("log-count-minute-last", new OneDimensionMinuteLastCountBolt(), 18).fieldsGrouping("log-minuteval-filter",
+				new Fields("fieldGroupingKey"));
+
+		builder.setBolt("log-update-minute", new OneDimensionMongoMinuteBolt(), 72).localOrShuffleGrouping("log-count-minute-other")
 				.localOrShuffleGrouping("log-count-minute-last");
 
 		Config conf = new Config();

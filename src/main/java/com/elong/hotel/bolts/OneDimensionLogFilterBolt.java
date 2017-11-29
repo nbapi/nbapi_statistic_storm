@@ -2,6 +2,7 @@ package com.elong.hotel.bolts;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -25,17 +26,21 @@ public class OneDimensionLogFilterBolt extends BaseRichBolt {
 
 	private static final long serialVersionUID = 890798096085674932L;
 
+	private Random rand = new Random();
+
 	private OutputCollector collector;
 
 	protected Map<String, Map<String[], Set<Metric>>> dimensionMetricMap;
 
 	private List<Integer> minuteList;
+	private List<Integer> otherList;
 
 	@Override
 	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
 		dimensionMetricMap = DimensionMetricService.getDimensionMetricMapping("one");
 		minuteList = context.getComponentTasks("log-count-minute-last");
+		otherList = context.getComponentTasks("log-count-minute");
 	}
 
 	@Override
@@ -56,9 +61,11 @@ public class OneDimensionLogFilterBolt extends BaseRichBolt {
 				String metricJson = JSON.toJSON(metric).toString();
 				Values values = new Values(module_key, dimensionKey, metricJson, jsonObj);
 				if (metric.getStrategy().isMinuteAdd()) {
-					collector.emitDirect(minuteList.get(0), values);
+					int idx = rand.nextInt(minuteList.size());
+					collector.emitDirect(minuteList.get(idx), values);
 				} else {
-					collector.emit(values);
+					int idx = rand.nextInt(otherList.size());
+					collector.emitDirect(otherList.get(idx), values);
 				}
 			}
 		}
@@ -66,7 +73,7 @@ public class OneDimensionLogFilterBolt extends BaseRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("businessType", "dimensionKey", "metric", "logJson"));
+		declarer.declare(true, new Fields("businessType", "dimensionKey", "metric", "logJson"));
 	}
 
 }

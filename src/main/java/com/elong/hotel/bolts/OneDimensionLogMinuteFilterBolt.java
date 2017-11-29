@@ -1,8 +1,10 @@
 package com.elong.hotel.bolts;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,17 +17,14 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.elong.hotel.bean.Metric;
-import com.elong.hotel.bean.OneDimensionMinuteStaticResult;
 import com.elong.hotel.constant.Const;
+import com.elong.hotel.util.CustomUtil;
 import com.elong.hotel.util.DateFormate;
 
-/**
- * 计算实时数据的bolt
- * */
-
-public class OneDimensionMinuteCountBolt extends BaseRichBolt {
+public class OneDimensionLogMinuteFilterBolt extends BaseRichBolt {
 
 	private static final long serialVersionUID = 1L;
 	private OutputCollector collector;
@@ -44,35 +43,21 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 			String dimensionKey = input.getString(1);
 			String metricStr = input.getString(2);
 			Metric metric = JSONObject.parseObject(metricStr, Metric.class);
-			JSONObject jsonObj = (JSONObject) input.getValue(3);
+			if (!metric.getStrategy().isMinuteAdd())
+				return;
 
+			JSONObject jsonObj = (JSONObject) input.getValue(3);
 			Date logTime = DateFormate.Formate(jsonObj.getString(Const.LOG_TIME));
-			String timeRange = DateFormatUtils.format(logTime, "HH:mm");
 			String dateTime = DateFormatUtils.format(logTime, DateFormate.YYYY_MM_DD_HH_MM);
 
-			OneDimensionMinuteStaticResult staticBean = new OneDimensionMinuteStaticResult();
-
-			staticBean.setBusinessType(businessType);
-			staticBean.setTime(dateTime);
-			staticBean.setDimension(dimensionKey);
-			staticBean.setTimeRange(timeRange);
-			staticBean.setMetric(metric.getName());
-			staticBean.setDate(DateFormatUtils.format(logTime, DateFormate.YYYY_MM_DD));
-
-			// 根据不同的方法相加
-			long value = 0;
-			if (metric.getStrategy().isSimpleAdd()) {
-				value = 1;
-			} else if (metric.getStrategy().isFieldAdd()) {
-				value = Long.parseLong(jsonObj.getString(metric.getFields()));
-			} else if (metric.getStrategy().isMinuteAdd()) {
-				value = Long.parseLong(jsonObj.getString(metric.getFields()));
-			}
-
-			staticBean.setDimensionItemName(jsonObj.getString(dimensionKey));
-			staticBean.setDimensionItemValue(value);
-
-			collector.emit(new Values(staticBean));
+			Map<String, Object> keyMap = new HashMap<String, Object>();
+			keyMap.put("collection", businessType);
+			keyMap.put("dimension", dimensionKey);
+			keyMap.put("dateTime", dateTime);
+			keyMap.put("metric", metric.getName());
+			keyMap.put("dimensionItem", "dimensionValue." + CustomUtil.deleteDot(jsonObj.getString(dimensionKey)));
+			String fieldGroupingKey = DigestUtils.md5Hex(JSON.toJSONString(keyMap));
+			collector.emit(new Values(fieldGroupingKey, businessType, dimensionKey, metricStr, jsonObj));
 		} catch (Exception e) {
 			boltErrorLogger.error(e.getMessage());
 		}
@@ -80,7 +65,7 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("field_minute_counter"));
+		declarer.declare(new Fields("fieldGroupingKey", "businessType", "dimensionKey", "metric", "logJson"));
 	}
 
 }
