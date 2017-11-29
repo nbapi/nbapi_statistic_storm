@@ -39,8 +39,8 @@ public class OneDimensionLogFilterBolt extends BaseRichBolt {
 	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
 		dimensionMetricMap = DimensionMetricService.getDimensionMetricMapping("one");
-		minuteList = context.getComponentTasks("log-minuteval-filter");
-		otherList = context.getComponentTasks("log-count-minute-other");
+		minuteList = context.getComponentTasks("log4-minuteval-filter");
+		otherList = context.getComponentTasks("log3-count-minute-other");
 	}
 
 	@Override
