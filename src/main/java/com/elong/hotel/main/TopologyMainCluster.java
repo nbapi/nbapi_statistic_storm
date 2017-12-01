@@ -25,9 +25,9 @@ public class TopologyMainCluster {
 
 		builder.setBolt("log2-normalizer", new OneDimensionLogFilterBolt(), 36).localOrShuffleGrouping("log1-handler");
 
-		builder.setBolt("log3-count-other", new OneDimensionMinuteCountBolt(), 144).directGrouping("log2-normalizer");
+		builder.setBolt("log3-count-other", new OneDimensionMinuteCountBolt(), 144).localOrShuffleGrouping("log2-normalizer");
 
-		builder.setBolt("log4-last-filter", new OneDimensionLogMinuteFilterBolt(), 18).directGrouping("log2-normalizer");
+		builder.setBolt("log4-last-filter", new OneDimensionLogMinuteFilterBolt(), 18).localOrShuffleGrouping("log2-normalizer");
 
 		builder.setBolt("log5-count-last", new OneDimensionMinuteLastCountBolt(), 18).fieldsGrouping("log4-last-filter",
 				new Fields("fieldGroupingKey"));

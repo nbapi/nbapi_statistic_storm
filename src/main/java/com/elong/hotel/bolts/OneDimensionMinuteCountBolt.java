@@ -44,8 +44,10 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 			String dimensionKey = input.getString(1);
 			String metricStr = input.getString(2);
 			Metric metric = JSONObject.parseObject(metricStr, Metric.class);
-			JSONObject jsonObj = (JSONObject) input.getValue(3);
+			if (metric.getStrategy().isMinuteAdd())
+				return;
 
+			JSONObject jsonObj = (JSONObject) input.getValue(3);
 			Date logTime = DateFormate.Formate(jsonObj.getString(Const.LOG_TIME));
 			String timeRange = DateFormatUtils.format(logTime, "HH:mm");
 			String dateTime = DateFormatUtils.format(logTime, DateFormate.YYYY_MM_DD_HH_MM);
@@ -64,8 +66,6 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 			if (metric.getStrategy().isSimpleAdd()) {
 				value = 1;
 			} else if (metric.getStrategy().isFieldAdd()) {
-				value = Long.parseLong(jsonObj.getString(metric.getFields()));
-			} else if (metric.getStrategy().isMinuteAdd()) {
 				value = Long.parseLong(jsonObj.getString(metric.getFields()));
 			}
 
