@@ -19,21 +19,21 @@ public class TopologyMainCluster {
 
 		TopologyBuilder builder = new TopologyBuilder();
 
-		builder.setSpout("spout_log_reader", new LogReaderSpoutsForKafka("orderSubmitQueue"), 18);
+		builder.setSpout("spout_reader", new LogReaderSpoutsForKafka("orderSubmitQueue"), 36);
 
-		builder.setBolt("log1-collect-handler", new LogCollectBolt(), 18).localOrShuffleGrouping("spout_log_reader");
+		builder.setBolt("log1-handler", new LogCollectBolt(), 36).localOrShuffleGrouping("spout_reader");
 
-		builder.setBolt("log2-normalizer-single", new OneDimensionLogFilterBolt(), 18).localOrShuffleGrouping("log1-collect-handler");
+		builder.setBolt("log2-normalizer", new OneDimensionLogFilterBolt(), 36).localOrShuffleGrouping("log1-handler");
 
-		builder.setBolt("log3-count-minute-other", new OneDimensionMinuteCountBolt(), 144).directGrouping("log2-normalizer-single");
+		builder.setBolt("log3-count-other", new OneDimensionMinuteCountBolt(), 144).directGrouping("log2-normalizer");
 
-		builder.setBolt("log4-minuteval-filter", new OneDimensionLogMinuteFilterBolt(), 18).directGrouping("log2-normalizer-single");
+		builder.setBolt("log4-last-filter", new OneDimensionLogMinuteFilterBolt(), 18).directGrouping("log2-normalizer");
 
-		builder.setBolt("log5-count-minute-last", new OneDimensionMinuteLastCountBolt(), 18).fieldsGrouping("log4-minuteval-filter",
+		builder.setBolt("log5-count-last", new OneDimensionMinuteLastCountBolt(), 18).fieldsGrouping("log4-last-filter",
 				new Fields("fieldGroupingKey"));
 
-		builder.setBolt("log6-update-minute", new OneDimensionMongoMinuteBolt(), 72).localOrShuffleGrouping("log3-count-minute-other")
-				.localOrShuffleGrouping("log5-count-minute-last");
+		builder.setBolt("log6-update", new OneDimensionMongoMinuteBolt(), 72).localOrShuffleGrouping("log3-count-other")
+				.localOrShuffleGrouping("log5-count-last");
 
 		Config conf = new Config();
 		conf.setDebug(true);
