@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -24,29 +23,20 @@ public class IncrQueryConvertHandler implements IBizHandler {
 		List<JSONObject> rst = new LinkedList<JSONObject>();
 
 		IncrQueryStatistic model = JSON.parseObject(jsonObject.toJSONString(), IncrQueryStatistic.class);
-		String businessType = StringUtils.substringBefore(model.getBusiness_type(), "_");
-		String incrType = StringUtils.substringAfter(model.getBusiness_type(), "_");
-
 		Map<String, Object> dimensionKeyValue = new HashMap<String, Object>();
-		dimensionKeyValue.put(Const.BUSINESS_TYPE, businessType);
+		dimensionKeyValue.put(Const.BUSINESS_TYPE, model.getBusiness_type() + "_" + model.getIncrType());
 		dimensionKeyValue.put(Const.LOG_TIME, model.getLog_time());
 
 		String agentName = AgentNameClassifier.classify(model.getProxyId());
-		dimensionKeyValue.put("agentNameGroup_" + incrType, agentName); // 按分销商统计订单量
+		dimensionKeyValue.put("incrType", model.getIncrType());
+		dimensionKeyValue.put("agentNameGroup", agentName); // 按分销商统计订单量
 		dimensionKeyValue.put("isEmptyStatus", model.isEmptyStatus() ? "empty count" : "no empty count");
 
 		// 按分销商统计空查询
 		if (model.isEmptyStatus()) {
-			dimensionKeyValue.put("agentNameCount_" + incrType, agentName);
+			dimensionKeyValue.put("agentNameCount", agentName);
 		}
 
-		// 当前时间
-		Date logTime = null;
-		try {
-			logTime = DateUtils.parseDate(model.getLog_time(), new String[] { "yyyy-MM-dd HH:mm:ss" });
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
 		// 查询延迟
 		Date queryTime = null;
 		try {
@@ -55,8 +45,9 @@ public class IncrQueryConvertHandler implements IBizHandler {
 			e.printStackTrace();
 		}
 		if (queryTime != null) {
-			long timeDiff = (logTime.getTime() - queryTime.getTime()) / (1000 * 60);
-			dimensionKeyValue.put("minuteVal", timeDiff);
+			Date now = new Date();
+			long timeDiff = (now.getTime() - queryTime.getTime()) / (1000 * 60);
+			dimensionKeyValue.put("timeDiff", timeDiff);
 		}
 
 		JSONObject jsonObj = new JSONObject(dimensionKeyValue);

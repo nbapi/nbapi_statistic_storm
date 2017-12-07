@@ -29,11 +29,13 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 
 	private static final long serialVersionUID = 1L;
 	private OutputCollector collector;
-	protected final static Logger boltErrorLogger = LoggerFactory.getLogger("bolt-error-log");
+	protected final static Logger boltErrorLogger = LoggerFactory
+			.getLogger("bolt-error-log");
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+	public void prepare(Map stormConf, TopologyContext context,
+			OutputCollector collector) {
 		this.collector = collector;
 	}
 
@@ -44,35 +46,38 @@ public class OneDimensionMinuteCountBolt extends BaseRichBolt {
 			String dimensionKey = input.getString(1);
 			String metricStr = input.getString(2);
 			Metric metric = JSONObject.parseObject(metricStr, Metric.class);
-			if (metric.getStrategy().isMinuteAdd())
-				return;
-
 			JSONObject jsonObj = (JSONObject) input.getValue(3);
+
 			Date logTime = DateFormate.Formate(jsonObj.getString(Const.LOG_TIME));
 			String timeRange = DateFormatUtils.format(logTime, "HH:mm");
-			String dateTime = DateFormatUtils.format(logTime, DateFormate.YYYY_MM_DD_HH_MM);
+			String dateTime = DateFormatUtils.format(logTime,
+					DateFormate.YYYY_MM_DD_HH_MM);
 
 			OneDimensionMinuteStaticResult staticBean = new OneDimensionMinuteStaticResult();
-
+			
 			staticBean.setBusinessType(businessType);
 			staticBean.setTime(dateTime);
 			staticBean.setDimension(dimensionKey);
 			staticBean.setTimeRange(timeRange);
 			staticBean.setMetric(metric.getName());
-			staticBean.setDate(DateFormatUtils.format(logTime, DateFormate.YYYY_MM_DD));
+			staticBean.setDate(DateFormatUtils.format(logTime,
+					DateFormate.YYYY_MM_DD));
 
 			// 根据不同的方法相加
 			long value = 0;
 			if (metric.getStrategy().isSimpleAdd()) {
 				value = 1;
 			} else if (metric.getStrategy().isFieldAdd()) {
-				value = Long.parseLong(jsonObj.getString(metric.getFields()));
+				long nightCount = Long.parseLong(jsonObj.getString(metric
+						.getFields()));
+				value = nightCount;
 			}
 
 			staticBean.setDimensionItemName(jsonObj.getString(dimensionKey));
 			staticBean.setDimensionItemValue(value);
 
 			collector.emit(new Values(staticBean));
+
 		} catch (Exception e) {
 			boltErrorLogger.error(e.getMessage());
 		}
