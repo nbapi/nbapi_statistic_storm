@@ -22,18 +22,15 @@ import com.mongodb.MongoClient;
 
 public class DimensionMetricService {
 
-	public static Map<String, Map<String[], Set<Metric>>> getDimensionMetricMapping(
-			String dimension2Filter) {
+	public static Map<String, Map<String[], Set<Metric>>> getDimensionMetricMapping(String dimension2Filter) {
 		DB mongoDB;
 		try {
-			mongoDB = new MongoClient(MongoConfig.getIp(),
-					MongoConfig.getPort()).getDB(MongoConfig.getDbName());
+			mongoDB = new MongoClient(MongoConfig.getIp(), MongoConfig.getPort()).getDB(MongoConfig.getDbName());
 		} catch (UnknownHostException e) {
 			throw new RuntimeException(e);
 		}
 
-		List<DBObject> dbObjs = mongoDB.getCollection(Const.C_MODULE).find()
-				.toArray();
+		List<DBObject> dbObjs = mongoDB.getCollection(Const.C_MODULE).find().toArray();
 
 		if (dbObjs.size() == 0)
 			return null;
@@ -46,9 +43,7 @@ public class DimensionMetricService {
 			DBObject queryIDRelation = new BasicDBObject();
 			queryIDRelation.put(Const.MODULE_ID, moduleId);
 
-			List<DBObject> dimensionList = mongoDB
-					.getCollection(Const.C_DIMENSION).find(queryIDRelation)
-					.toArray();
+			List<DBObject> dimensionList = mongoDB.getCollection(Const.C_DIMENSION).find(queryIDRelation).toArray();
 
 			// 只保留dimension2Filter维的维度
 			List<DBObject> filterDimensionList = new LinkedList<DBObject>();
@@ -67,10 +62,8 @@ public class DimensionMetricService {
 			}
 
 			DBObject queryDimensionMetric = new BasicDBObject();
-			queryDimensionMetric.put("dimension_id", new BasicDBObject("$in",
-					setDemsion));
-			DBCursor cursorDimensionMetric = mongoDB.getCollection(
-					"C_DIMENSION_METRIC_RELATION").find(queryDimensionMetric);
+			queryDimensionMetric.put("dimension_id", new BasicDBObject("$in", setDemsion));
+			DBCursor cursorDimensionMetric = mongoDB.getCollection("C_DIMENSION_METRIC_RELATION").find(queryDimensionMetric);
 
 			Map<String, Metric> metricMap = findAllMetric(mongoDB);
 			Map<String, Set<Metric>> dimensionMetricMap = new HashMap<String, Set<Metric>>();
@@ -86,8 +79,7 @@ public class DimensionMetricService {
 
 					dimensionMetricMap.put(dimensionId, setDimensionMetric);
 				} else {
-					dimensionMetricMap.get(dimensionId).add(
-							metricMap.get(metircId));
+					dimensionMetricMap.get(dimensionId).add(metricMap.get(metircId));
 				}
 			}
 
@@ -95,8 +87,7 @@ public class DimensionMetricService {
 			for (DBObject item : filterDimensionList) {
 				String id = item.get("_id").toString();
 				String dimension = item.get("dimension_name").toString();
-				dimensionNameMetricMap.put(new String[] { id, dimension },
-						dimensionMetricMap.get(id));
+				dimensionNameMetricMap.put(new String[] { id, dimension }, dimensionMetricMap.get(id));
 			}
 
 			rst.put(moduleBizType, dimensionNameMetricMap);
@@ -116,6 +107,9 @@ public class DimensionMetricService {
 			String formula = dbObj.get("formula").toString();
 			if (StringUtils.isBlank(formula)) {
 				strategy = MetricStrategy.simleAdd;
+			} else if ("minuteVal".equals(formula)) {
+				strategy = MetricStrategy.minuteAdd;
+				fields = formula;
 			} else {
 				strategy = MetricStrategy.fieldAdd;
 				fields = formula;

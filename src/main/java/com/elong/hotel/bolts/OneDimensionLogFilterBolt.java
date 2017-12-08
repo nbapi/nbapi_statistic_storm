@@ -29,36 +29,36 @@ public class OneDimensionLogFilterBolt extends BaseRichBolt {
 	protected Map<String, Map<String[], Set<Metric>>> dimensionMetricMap;
 
 	@Override
-	public void prepare(@SuppressWarnings("rawtypes") Map stormConf,
-			TopologyContext context, OutputCollector collector) {
+	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
-		dimensionMetricMap = DimensionMetricService
-				.getDimensionMetricMapping("one");
+		dimensionMetricMap = DimensionMetricService.getDimensionMetricMapping("one");
 	}
 
 	@Override
 	public void execute(Tuple input) {
 		JSONObject jsonObj = (JSONObject) input.getValue(0);
 		String module_key = jsonObj.getString(Const.BUSINESS_TYPE);
-		if (module_key == null) return;
-		if (!dimensionMetricMap.containsKey(module_key)) return;
-		
+		if (module_key == null)
+			return;
+		if (!dimensionMetricMap.containsKey(module_key))
+			return;
+
 		for (Entry<String[], Set<Metric>> e : dimensionMetricMap.get(module_key).entrySet()) {
-			String dimensionItemName = jsonObj.getString(e.getKey()[1]); // 判断是不是发给
-																			// 该统计维度的消息
-			if (StringUtils.isNotEmpty(dimensionItemName)) {
-				for (Metric metric : e.getValue()) {
-					String metricJson = JSON.toJSON(metric).toString();
-					collector.emit(new Values(module_key, e.getKey()[1], metricJson,
-							jsonObj));
-				}
+			String dimensionItemName = jsonObj.getString(e.getKey()[1]); // 判断是不是发给该统计维度的消息
+			if (StringUtils.isEmpty(dimensionItemName))
+				continue;
+			for (Metric metric : e.getValue()) {
+				String dimensionKey = e.getKey()[1];
+				String metricJson = JSON.toJSON(metric).toString();
+				Values values = new Values(module_key, dimensionKey, metricJson, jsonObj);
+				collector.emit(values);
 			}
 		}
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("businessType","dimensionKey", "metric", "logJson"));
+		declarer.declare(true, new Fields("businessType", "dimensionKey", "metric", "logJson"));
 	}
 
 }
