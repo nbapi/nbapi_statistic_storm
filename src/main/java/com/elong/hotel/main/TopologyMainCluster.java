@@ -19,20 +19,20 @@ public class TopologyMainCluster {
 
 		TopologyBuilder builder = new TopologyBuilder();
 
-		builder.setSpout("spout_reader", new LogReaderSpoutsForKafka("orderSubmitQueue"), 36);
+		builder.setSpout("spout_reader", new LogReaderSpoutsForKafka("orderSubmitQueue"), 20);
 
-		builder.setBolt("log1-handler", new LogCollectBolt(), 36).localOrShuffleGrouping("spout_reader");
+		builder.setBolt("log1-handler", new LogCollectBolt(), 56).localOrShuffleGrouping("spout_reader");
 
-		builder.setBolt("log2-normalizer", new OneDimensionLogFilterBolt(), 36).localOrShuffleGrouping("log1-handler");
+		builder.setBolt("log2-normalizer", new OneDimensionLogFilterBolt(), 56).localOrShuffleGrouping("log1-handler");
 
-		builder.setBolt("log3-count-other", new OneDimensionMinuteCountBolt(), 72).localOrShuffleGrouping("log2-normalizer");
+		builder.setBolt("log3-count-other", new OneDimensionMinuteCountBolt(), 112).localOrShuffleGrouping("log2-normalizer");
 
-		builder.setBolt("log4-last-filter", new OneDimensionLogMinuteFilterBolt(), 36).localOrShuffleGrouping("log2-normalizer");
+		builder.setBolt("log4-last-filter", new OneDimensionLogMinuteFilterBolt(), 112).localOrShuffleGrouping("log2-normalizer");
 
-		builder.setBolt("log5-count-last", new OneDimensionMinuteLastCountBolt(), 36).fieldsGrouping("log4-last-filter",
+		builder.setBolt("log5-count-last", new OneDimensionMinuteLastCountBolt(), 56).fieldsGrouping("log4-last-filter",
 				new Fields("fieldGroupingKey"));
 
-		builder.setBolt("log6-update", new OneDimensionMongoMinuteBolt(), 72).localOrShuffleGrouping("log3-count-other")
+		builder.setBolt("log6-update", new OneDimensionMongoMinuteBolt(), 112).localOrShuffleGrouping("log3-count-other")
 				.localOrShuffleGrouping("log5-count-last");
 
 		Config conf = new Config();
@@ -40,7 +40,7 @@ public class TopologyMainCluster {
 
 		// cluster mode:
 		try {
-			conf.setNumWorkers(35);
+			conf.setNumWorkers(55);
 			StormSubmitter.submitTopology("NBAPIStatisticTopologyJstorm", conf, builder.createTopology());
 		} catch (Exception e) {
 			e.printStackTrace();
