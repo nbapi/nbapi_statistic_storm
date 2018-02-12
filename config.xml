@@ -1,0 +1,436 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>NB监控实时计算</description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>7</daysToKeep>
+    <numToKeep>15</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.TextParameterDefinition>
+          <name>checkerjson</name>
+          <description></description>
+          <defaultValue>{&quot;unittest&quot;:{&quot;branchcoverage&quot;:0.8,&quot;linecoverage&quot;:0.8}, &#x0D;&#x0A;
+&quot;checkstyle&quot;:{&quot;blocker&quot;:0,&quot;critical&quot;:0,&quot;major&quot;:0,&quot;minor&quot;:0,&quot;info&quot;:0,&quot;thousandlineissue&quot;:0},  &#x0D;&#x0A;
+&quot;findbugs&quot;:{&quot;blocker&quot;:0,&quot;critical&quot;:0,&quot;major&quot;:0,&quot;minor&quot;:0,&quot;info&quot;:0,&quot;thousandlineissue&quot;:0}, &#x0D;&#x0A;
+&quot;staticcode&quot;: {&quot;blocker&quot;:0,&quot;critical&quot;:0,&quot;major&quot;:0,&quot;minor&quot;:0,&quot;info&quot;:0,&quot;thousandlineissue&quot;:0}}</defaultValue>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>package_name</name>
+          <description>project package</description>
+          <defaultValue>nbapi-statistic-storm-jar-with-dependencies.jar</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>remote_ftp_dir</name>
+          <description>ftp remote path</description>
+          <defaultValue>/nbapi/nbapi_statistic_storm</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>real_job_name</name>
+          <description>real jenkins job name</description>
+          <defaultValue>nbapi_statistic_storm</defaultValue>
+        </hudson.model.StringParameterDefinition>
+		<hudson.model.StringParameterDefinition>
+			<name>project_build_version</name>
+			<description>Build Version</description>
+			<defaultValue>-1</defaultValue>
+		</hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>buildjob_id</name>
+          <description></description>
+          <defaultValue>0</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+        <name>codeBranch</name>
+        <description>编译打包分支</description>
+        <defaultValue>*</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.4.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>git@code.corp.elong.com:nb-api/nbapi_statistic_storm.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>$codeBranch</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <browser class="hudson.plugins.git.browser.GitLab">
+      <url>http://code.corp.elong.com/</url>
+      <version>7.5</version>
+    </browser>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <assignedNode>linux-cluster</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <!--triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec>* * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers-->
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+		<command>
+#!/bin/bash&#x0D;&#x0A;
+mvn clean -s /root/hotel/mvn_conf/settings.xml &#x0D;&#x0A;
+		</command>
+	</hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh &#x0D;&#x0A;
+#触发编译&amp;单元测试&#x0D;&#x0A;
+sh  &quot;$shellscript/cobertura.sh&quot;</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh&#x0D;&#x0A;
+#进行静态代码检查，并将数据传给Sonar&#x0D;&#x0A;
+sh &quot;$shellscript/sonar.sh&quot;</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh&#x0D;&#x0A;
+#收集Sonar中的数据&#x0D;&#x0A;
+sh &quot;$shellscript/dc.sh&quot;</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh&#x0D;&#x0A;
+#静态代码检查阀值判断&#x0D;&#x0A;
+sh &quot;$shellscript/checker.sh&quot; -Djson=&quot;$checkerjson&quot;</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+		<command>
+#!/bin/bash&#x0D;&#x0A;
+mvn source:jar javadoc:jar deploy -Dmaven.test.skip=true -s /root/hotel/mvn_conf/settings.xml &#x0D;&#x0A;
+        result=$?&#x0D;&#x0A;
+        echo &quot;result:&quot;$result&#x0D;&#x0A;
+        if [ &quot;$result&quot; = &quot;0&quot; ]; then&#x0D;&#x0A;
+            echo &quot;upload package to ftp success&quot;&#x0D;&#x0A;
+            echo &quot;success&quot; &gt; ./build_resut.properties&#x0D;&#x0A;
+        else&#x0D;&#x0A;
+            echo &quot;upload package to ftp FAILUER&quot;&#x0D;&#x0A;
+            echo &quot;fail&quot; &gt; ./build_resut.properties&#x0D;&#x0A;
+        fi&#x0D;&#x0A;
+        cat ./build_resut.properties&#x0D;&#x0A;</command>
+	</hudson.tasks.Shell> 
+   <EnvInjectBuilder plugin="envinject@1.89">
+        <info>
+            <propertiesFilePath>./build_resut.properties</propertiesFilePath>
+        </info>
+    </EnvInjectBuilder>
+
+  </builders>
+  <publishers>
+    <hudson.plugins.postbuildtask.PostbuildTask plugin="postbuild-task@1.8">
+      <tasks>
+        <hudson.plugins.postbuildtask.TaskProperties>
+          <logTexts>
+            <hudson.plugins.postbuildtask.LogProperties>
+              <logText></logText>
+              <operator>AND</operator>
+            </hudson.plugins.postbuildtask.LogProperties>
+          </logTexts>
+          <EscalateStatus>false</EscalateStatus>
+          <RunIfJobSuccessful>false</RunIfJobSuccessful>
+          <script>#!/bin/sh&#xd;&#x0D;&#x0A;
+#CI执行完成，进行结果分析&#xd;&#x0D;&#x0A;
+sh  &quot;$shellscript/analycidata.sh&quot;</script>
+        </hudson.plugins.postbuildtask.TaskProperties>
+        <hudson.plugins.postbuildtask.TaskProperties>
+          <logTexts>
+            <hudson.plugins.postbuildtask.LogProperties>
+              <logText></logText>
+              <operator>AND</operator>
+            </hudson.plugins.postbuildtask.LogProperties>
+          </logTexts>
+          <EscalateStatus>false</EscalateStatus>
+          <RunIfJobSuccessful>false</RunIfJobSuccessful>
+          <script>
+	  #!/bin/sh&#x0D;&#x0A;
+          #CI执行完成，回调vela接口，返回构建结果&#x0D;&#x0A;
+          echo BUILD_RESULT:&#x0D;&#x0A;
+          if [ -f ./build_resut.properties ]; then&#x0D;&#x0A;
+	      build_result=`cat ./build_resut.properties`&#x0D;&#x0A;
+              rm -rf ./build_resut.properties&#x0D;&#x0A;
+          fi&#x0D;&#x0A;
+          echo $build_result&#x0D;&#x0A;
+          result=2&#x0D;&#x0A;
+          if [ &quot;$build_result&quot; = &quot;success&quot; ]; then&#x0D;&#x0A;
+            	echo &quot;build SUCCESS!!&quot;&#x0D;&#x0A;
+          	result=0&#x0D;&#x0A;
+          fi&#x0D;&#x0A;
+          echo $result&#x0D;&#x0A;
+          curl -w %{http_code} -d &quot;id=$buildjob_id&amp;result=${result}&amp;output=&quot; http://vela.corp.elong.com/vela/api/compile/callback?secretkey=144101572265f3c7acf838905ddd03139956e383a7&#x0D;&#x0A;
+	  </script> 
+          </hudson.plugins.postbuildtask.TaskProperties>
+      </tasks>
+    </hudson.plugins.postbuildtask.PostbuildTask>
+    <hudson.plugins.checkstyle.CheckStylePublisher plugin="checkstyle@3.39">
+      <healthy></healthy>
+      <unHealthy></unHealthy>
+      <thresholdLimit>low</thresholdLimit>
+      <pluginName>[CHECKSTYLE] </pluginName>
+      <defaultEncoding></defaultEncoding>
+      <canRunOnFailed>false</canRunOnFailed>
+      <useStableBuildAsReference>false</useStableBuildAsReference>
+      <useDeltaValues>false</useDeltaValues>
+      <thresholds plugin="analysis-core@1.58">
+        <unstableTotalAll></unstableTotalAll>
+        <unstableTotalHigh></unstableTotalHigh>
+        <unstableTotalNormal></unstableTotalNormal>
+        <unstableTotalLow></unstableTotalLow>
+        <failedTotalAll></failedTotalAll>
+        <failedTotalHigh></failedTotalHigh>
+        <failedTotalNormal></failedTotalNormal>
+        <failedTotalLow></failedTotalLow>
+      </thresholds>
+      <shouldDetectModules>false</shouldDetectModules>
+      <dontComputeNew>true</dontComputeNew>
+      <doNotResolveRelativePaths>false</doNotResolveRelativePaths>
+      <pattern>**/checkstyle-result.xml</pattern>
+    </hudson.plugins.checkstyle.CheckStylePublisher>
+    <hudson.plugins.findbugs.FindBugsPublisher plugin="findbugs@4.57">
+      <healthy></healthy>
+      <unHealthy></unHealthy>
+      <thresholdLimit>low</thresholdLimit>
+      <pluginName>[FINDBUGS] </pluginName>
+      <defaultEncoding></defaultEncoding>
+      <canRunOnFailed>false</canRunOnFailed>
+      <useStableBuildAsReference>false</useStableBuildAsReference>
+      <useDeltaValues>false</useDeltaValues>
+      <thresholds plugin="analysis-core@1.58">
+        <unstableTotalAll></unstableTotalAll>
+        <unstableTotalHigh></unstableTotalHigh>
+        <unstableTotalNormal></unstableTotalNormal>
+        <unstableTotalLow></unstableTotalLow>
+        <failedTotalAll></failedTotalAll>
+        <failedTotalHigh></failedTotalHigh>
+        <failedTotalNormal></failedTotalNormal>
+        <failedTotalLow></failedTotalLow>
+      </thresholds>
+      <shouldDetectModules>false</shouldDetectModules>
+      <dontComputeNew>true</dontComputeNew>
+      <doNotResolveRelativePaths>true</doNotResolveRelativePaths>
+      <pattern>**/findbugs-result.xml</pattern>
+      <isRankActivated>false</isRankActivated>
+      <excludePattern></excludePattern>
+      <includePattern></includePattern>
+    </hudson.plugins.findbugs.FindBugsPublisher>
+    <hudson.plugins.cobertura.CoberturaPublisher plugin="cobertura@1.9.5">
+      <coberturaReportFile>**/target/site/cobertura/coverage.xml</coberturaReportFile>
+      <onlyStable>false</onlyStable>
+      <failUnhealthy>false</failUnhealthy>
+      <failUnstable>false</failUnstable>
+      <autoUpdateHealth>false</autoUpdateHealth>
+      <autoUpdateStability>false</autoUpdateStability>
+      <zoomCoverageChart>false</zoomCoverageChart>
+      <maxNumberOfBuilds>0</maxNumberOfBuilds>
+      <failNoReports>true</failNoReports>
+      <healthyTarget>
+        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>8000000</int>
+          </entry>
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>8000000</int>
+          </entry>
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>7000000</int>
+          </entry>
+        </targets>
+      </healthyTarget>
+      <unhealthyTarget>
+        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>0</int>
+          </entry>
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>0</int>
+          </entry>
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>0</int>
+          </entry>
+        </targets>
+      </unhealthyTarget>
+      <failingTarget>
+        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>0</int>
+          </entry>
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>0</int>
+          </entry>
+          <entry>
+            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
+            <int>0</int>
+          </entry>
+        </targets>
+      </failingTarget>
+      <sourceEncoding>ASCII</sourceEncoding>
+    </hudson.plugins.cobertura.CoberturaPublisher>
+    <hudson.tasks.junit.JUnitResultArchiver plugin="junit@1.0">
+      <testResults> **/target/surefire-reports/*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <testDataPublishers/>
+      <healthScaleFactor>1.0</healthScaleFactor>
+    </hudson.tasks.junit.JUnitResultArchiver>
+    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="email-ext@2.38.2">
+      <recipientList>TechOpen@corp.elong.com</recipientList>
+      <configuredTriggers>
+        <hudson.plugins.emailext.plugins.trigger.AlwaysTrigger>
+          <email>
+            <recipientList></recipientList>
+            <subject>$PROJECT_DEFAULT_SUBJECT</subject>
+            <body>$PROJECT_DEFAULT_CONTENT</body>
+            <recipientProviders>
+              <hudson.plugins.emailext.plugins.recipients.ListRecipientProvider/>
+            </recipientProviders>
+            <attachmentsPattern></attachmentsPattern>
+            <attachBuildLog>false</attachBuildLog>
+            <compressBuildLog>false</compressBuildLog>
+            <replyTo>$PROJECT_DEFAULT_REPLYTO</replyTo>
+            <contentType>project</contentType>
+          </email>
+        </hudson.plugins.emailext.plugins.trigger.AlwaysTrigger>
+      </configuredTriggers>
+      <contentType>default</contentType>
+      <defaultSubject>
+${real_job_name} - Build # ${BUILD_NUMBER} - AOS Version : ${project_build_version} - $BUILD_STATUS!</defaultSubject>
+      <defaultContent>&lt;html&gt;
+    &lt;head&gt;
+      &lt;title&gt;${JOB_NAME}&lt;/title&gt;
+      &lt;style&gt;
+        body table, td, th, p, h1, h2 {
+        margin:0;
+        font:normal normal
+        100% Georgia, Serif;
+        background-color: #ffffff;
+        }
+        h1, h2 {
+        border-bottom:dotted 1px #999999;
+        padding:5px;
+        margin-top:10px;
+        margin-bottom:10px;
+        color: #000000;
+        font: normal bold 130%
+        Georgia,Serif;
+        background-color:#f0f0f0;
+        }
+        tr.gray {
+        background-color:#f0f0f0;
+        }
+        h2 {
+        padding:5px;
+        margin-top:5px;
+        margin-bottom:5px;
+        font: italic bold 110% Georgia,Serif;
+        }
+        .bg2 {
+        color:black;
+        background-color:#E0E0E0;
+        font-size:110%
+        }
+        th {
+        font-weight: bold;
+        }
+        tr, td, th {
+        padding:2px;
+        }
+        td.test_passed {
+        color:blue;
+        }
+        td.test_failed {
+        color:red;
+        }
+        td.center {
+          text-align: center;
+        }
+        td.test_skipped {
+        color:grey;
+        }
+        .console {
+        font: normal normal 90% Courier New,
+        monotype;
+        padding:0px;
+        margin:0px;
+        }
+        div.content, div.header {
+        background: #ffffff;
+        border: dotted
+        1px #666;
+        margin: 2px;
+        content:
+        2px;
+        padding: 2px;
+        }
+        table.border, table.border th, table..border td {
+        border:
+        1px solid black;
+        border-collapse:collapse;
+        }
+      &lt;/style&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+${JELLY_SCRIPT,template=&quot;build-info&quot;}
+${JELLY_SCRIPT,template=&quot;build-health&quot;}
+${JELLY_SCRIPT,template=&quot;change-set&quot;}
+${JELLY_SCRIPT,template=&quot;artifacts&quot;}
+${JELLY_SCRIPT,template=&quot;module-build&quot;}
+${JELLY_SCRIPT,template=&quot;cobertura&quot;}
+${JELLY_SCRIPT,template=&quot;junit&quot;}
+${JELLY_SCRIPT,template=&quot;static-code-analysis&quot;}
+${JELLY_SCRIPT,template=&quot;console&quot;}
+&lt;div class=&quot;content&quot;&gt;
+&lt;h1&gt;执行步骤&lt;/h1&gt;
+&lt;table class=&quot;border&quot;&gt;
+&lt;tr&gt;
+  &lt;td&gt;步骤名称&lt;/td&gt;
+  &lt;td&gt;开始时间&lt;/td&gt;
+  &lt;td&gt;结束时间&lt;/td&gt;
+  &lt;td&gt;耗时(s)&lt;/td&gt;
+  &lt;td&gt;返回值&lt;/td&gt;
+&lt;/tr&gt;
+${FILE,path=&quot;ext-mail-${BUILD_NUMBER}.html&quot;}
+&lt;/table&gt;
+&lt;br /&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</defaultContent>
+      <attachmentsPattern></attachmentsPattern>
+      <presendScript>$DEFAULT_PRESEND_SCRIPT</presendScript>
+      <attachBuildLog>true</attachBuildLog>
+      <compressBuildLog>false</compressBuildLog>
+      <replyTo>$DEFAULT_REPLYTO</replyTo>
+      <saveOutput>false</saveOutput>
+    </hudson.plugins.emailext.ExtendedEmailPublisher>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.ansicolor.AnsiColorBuildWrapper plugin="ansicolor@0.4.0">
+      <colorMapName>xterm</colorMapName>
+    </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
+  </buildWrappers>
+</project>

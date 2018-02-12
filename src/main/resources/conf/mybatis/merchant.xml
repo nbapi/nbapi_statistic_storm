@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Aug 20 17:02:07 CST 2012-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Merchant">
+	
+   <resultMap id="BaseResultMap" type="Merchant">
+    <id column="id" jdbcType="DECIMAL" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="short_name" jdbcType="VARCHAR" property="shortName" />
+    <result column="merchant_statue" jdbcType="DECIMAL" property="status" />
+    <result column="weight" jdbcType="DECIMAL" property="weight" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="telephone" jdbcType="VARCHAR" property="telephone" />
+  </resultMap>
+  
+ <select id="findEntityListByCond" parameterType="java.util.Map" resultMap="BaseResultMap">
+  	select * from tb_car_merchant
+  	<where >
+      <if test="id != null">
+        and id = #{id,jdbcType=DECIMAL}
+      </if>
+      <if test="name != null">
+        and name = #{name,jdbcType=VARCHAR}
+      </if>
+      <if test="shortName != null">
+        and short_name = #{shortName,jdbcType=VARCHAR}
+      </if>
+      <if test="status != null">
+        and merchant_statue = #{status,jdbcType=DECIMAL}
+      </if>
+      <if test="type != null">
+        and type = #{type,jdbcType=VARCHAR}
+      </if>
+      <if test="telephone != null">
+        and telephone = #{telephone,jdbcType=VARCHAR}
+      </if>
+    </where>
+  </select>
+  
+  <update id="updateEntity" parameterType="Merchant">
+    update tb_car_merchant
+    
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+       merchant_statue = #{status,jdbcType=DECIMAL},
+      </if>
+      
+      <if test="telephone != null">
+        telephone = #{telephone,jdbcType=VARCHAR},
+      </if>
+      
+      <if test="shortName != null">
+        short_name = #{shortName,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=DECIMAL},
+      </if>
+      <if test="weight != null">
+        weight = #{weight,jdbcType=DECIMAL},
+      </if>
+    </set>
+    where id = #{id,jdbcType=DECIMAL}
+  </update>
+	
+</mapper>
